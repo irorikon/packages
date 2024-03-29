@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=strongswan
-PKG_VERSION:=5.9.6
+PKG_VERSION:=5.9.13
 PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=https://download.strongswan.org/ https://download2.strongswan.org/
-PKG_HASH:=91d0978ac448912759b85452d8ff0d578aafd4507aaf4f1c1719f9d0c7318ab7
+PKG_HASH:=56e30effb578fd9426d8457e3b76c8c3728cd8a5589594b55649b2719308ba55
 PKG_LICENSE:=GPL-2.0-or-later
 PKG_MAINTAINER:=Philip Prindeville <philipp@redfish-solutions.com>, Noel Kuntze <noel.kuntze@thermi.consulting>
 PKG_CPE_ID:=cpe:/a:strongswan:strongswan
@@ -95,7 +95,6 @@ PKG_MOD_AVAILABLE:= \
 	updown \
 	vici \
 	whitelist \
-	wolfssl \
 	x509 \
 	xauth-eap \
 	xauth-generic \
@@ -225,7 +224,6 @@ $(call Package/strongswan/Default)
 	+strongswan-mod-updown \
 	+strongswan-mod-vici \
 	+strongswan-mod-whitelist \
-	+strongswan-mod-wolfssl \
 	+strongswan-mod-x509 \
 	+strongswan-mod-xauth-eap \
 	+strongswan-mod-xauth-generic \
@@ -389,7 +387,7 @@ endef
 define Package/strongswan-pki
 $(call Package/strongswan/Default)
   TITLE+= PKI tool
-  DEPENDS:= strongswan
+  DEPENDS:= strongswan  strongswan-libtls
 endef
 
 define Package/strongswan-pki/description
@@ -479,8 +477,6 @@ CONFIGURE_ARGS+= \
 	  $(if $(CONFIG_PACKAGE_strongswan-mod-$(m)),--enable-$(m),--disable-$(m)) \
 	) \
 	ac_cv_search___atomic_load=no
-
-EXTRA_LDFLAGS+= -Wl,-rpath-link,$(STAGING_DIR)/usr/lib
 
 define Package/strongswan/conffiles
 /etc/strongswan.conf
@@ -673,7 +669,7 @@ $(eval $(call BuildPlugin,attr-sql,SQL based config,+strongswan-charon))
 $(eval $(call BuildPlugin,bliss,BLISS crypto,+strongswan-libnttfft +strongswan-mod-mgf1 +strongswan-mod-hmac))
 $(eval $(call BuildPlugin,blowfish,Blowfish crypto,))
 $(eval $(call BuildPlugin,ccm,CCM AEAD wrapper crypto,))
-$(eval $(call BuildPlugin,chapoly,ChaCha20-Poly1305 AEAD crypto,+kmod-crypto-chacha20poly1305))
+$(eval $(call BuildPlugin,chapoly,ChaCha20-Poly1305 AEAD crypto,))
 $(eval $(call BuildPlugin,cmac,CMAC crypto,))
 $(eval $(call BuildPlugin,connmark,netfilter connection marking,))
 $(eval $(call BuildPlugin,constraints,advanced X509 constraint checking,))
@@ -740,7 +736,6 @@ $(eval $(call BuildPlugin,unity,Cisco Unity extension,))
 $(eval $(call BuildPlugin,updown,updown firewall,))
 $(eval $(call BuildPlugin,vici,Versatile IKE Configuration Interface,))
 $(eval $(call BuildPlugin,whitelist,peer identity whitelisting,))
-$(eval $(call BuildPlugin,wolfssl,WolfSSL crypto,+PACKAGE_strongswan-mod-wolfssl:libwolfssl))
 $(eval $(call BuildPlugin,x509,x509 certificate,))
 $(eval $(call BuildPlugin,xauth-eap,EAP XAuth backend,))
 $(eval $(call BuildPlugin,xauth-generic,generic XAuth backend,))

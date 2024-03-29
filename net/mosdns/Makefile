@@ -19,7 +19,6 @@ PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
-PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/IrineSistiana/mosdns
 GO_PKG_LDFLAGS_X:=main.version=v$(PKG_VERSION)
@@ -35,8 +34,6 @@ define Package/mosdns
   URL:=https://github.com/IrineSistiana/mosdns
   DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
 endef
-
-GO_PKG_TARGET_VARS:=$(filter-out CGO_ENABLED=%,$(GO_PKG_TARGET_VARS)) CGO_ENABLED=0
 
 define Package/mosdns/install
 	$(call GoPackage/Package/Install/Bin,$(1))

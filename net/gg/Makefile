@@ -5,12 +5,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gg
-PKG_VERSION:=0.2.14
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=0.2.18
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/mzz2017/gg/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=f1438f2f2d4f376c3cec69d6a822fdf00f8511c56c32f6f48b13ee67b361341c
+PKG_HASH:=e49ec76f64941b89381fa2fd1060f40ad1f172483a42a56e3a39c5bc67ef0b99
 
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 PKG_LICENSE:=AGPL-3.0-only
@@ -44,9 +44,7 @@ define Package/gg/description
 endef
 
 define Package/gg/conffiles
-/root/.config/gg/config.toml
 /root/.ggconfig.toml
-/etc/ggconfig.toml
 endef
 
 $(eval $(call GoBinPackage,gg))

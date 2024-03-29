@@ -10,7 +10,7 @@
 #
 LC_ALL=C
 PATH="/usr/sbin:/usr/bin:/sbin:/bin"
-adb_ver="3.8.15"
+adb_ver="4.1.5-8"
 adb_sysver="unknown"
 adb_enabled=0
 adb_debug=0
@@ -113,11 +113,11 @@ f_envload()
 		dnsmasq)
 			adb_dnsinstance="${adb_dnsinstance:-"0"}"
 			adb_dnsuser="${adb_dnsuser:-"dnsmasq"}"
-			adb_dnsdir="${adb_dnsdir:-"/tmp"}"
+			adb_dnsdir="${adb_dnsdir:-"/tmp/dnsmasq.d"}"
 			adb_dnsheader=""
-			adb_dnsdeny="awk '{print \"server=/\"\$0\"/\"}'"
-			adb_dnsallow="awk '{print \"server=/\"\$0\"/#\"}'"
-			adb_dnshalt="server=/#/"
+			adb_dnsdeny="awk '{print \"local=/\"\$0\"/\"}'"
+			adb_dnsallow="awk '{print \"local=/\"\$0\"/#\"}'"
+			adb_dnshalt="address=/#/"
 		;;
 		unbound)
 			adb_dnsinstance="${adb_dnsinstance:-"0"}"
@@ -261,7 +261,7 @@ f_temp()
 {
 	if [ -z "${adb_tmpdir}" ]
 	then
-		adb_tmpdir="$(mktemp -p /tmp -d)"
+		adb_tmpdir="$(mktemp -p /tmp/dnsmasq.d -d)"
 		adb_tmpload="$(mktemp -p ${adb_tmpdir} -tu)"
 		adb_tmpfile="$(mktemp -p ${adb_tmpdir} -tu)"
 	fi

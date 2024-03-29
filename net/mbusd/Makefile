@@ -39,8 +39,4 @@ define Package/mbusd/install
 	$(INSTALL_BIN) ./files/mbusd.init $(1)/etc/init.d/mbusd
 endef
 
-define Package/mbusd/conffiles
-/etc/config/mbusd
-endef
-
 $(eval $(call BuildPackage,mbusd))

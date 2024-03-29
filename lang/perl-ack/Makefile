@@ -52,7 +52,7 @@ endef
 define Package/ack/install
 	$(INSTALL_DIR) $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/ack $(1)/usr/bin/
-	$(call perlmod/FixShebang,$(1)/usr/bin/*)
+	$(SED) "1"'!'"b;s,^#"'!'".*perl.*,#"'!'"/usr/bin/perl," -i --follow-symlinks $(1)/usr/bin/ack
 endef
 
 define Package/perl-ack/install

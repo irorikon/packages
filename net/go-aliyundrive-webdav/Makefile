@@ -32,8 +32,9 @@ define Package/go-aliyundrive-webdav
   SUBMENU:=File Transfer
   TITLE:=A WebDav server for AliyunDrive
   URL:=https://github.com/LinkLeong/go-aliyundrive-webdav
-  DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
+  DEPENDS:=$(GO_ARCH_DEPENDS)
 endef
+
 
 define Package/go-aliyundrive-webdav/conffiles
 /etc/config/go-aliyundrive-webdav

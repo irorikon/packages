@@ -15,7 +15,7 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://www.clamav.net/downloads/production/
 PKG_HASH:=3e45e46d9aaeb3a6956ed30376237ab7c4cd9573bc0f5d6fc15c588d30978d9d
 
-PKG_MAINTAINER:=Marko Ratkaj <marko.ratkaj@sartura.hr> \
+PKG_MAINTAINER:=Marko Ratkaj <markoratkaj@gmail.com> \
 		Lucian Cristian <lucian.cristian@gmail.com>
 PKG_LICENSE:=GPL-2.0-only
 PKG_LICENSE_FILES:=COPYING*
@@ -70,8 +70,6 @@ CMAKE_OPTIONS += \
 	-DENABLE_EXAMPLES=OFF \
 	-DENABLE_UNRAR=OFF \
 	-DENABLE_SYSTEMD=OFF \
-	-DIconv_INCLUDE_DIR=$(ICONV_PREFIX)/include \
-	-DIconv_LIBRARY=$(ICONV_PREFIX)/lib/libiconv.$(if $(ICONV_FULL),so,a) \
 	-DHAVE_SYSTEM_LFS_FTS=O$(if $(CONFIG_USE_GLIBC),N,FF)
 
 TARGET_CXXFLAGS += -ffunction-sections -fdata-sections -fno-rtti -flto
@@ -79,6 +77,7 @@ TARGET_LDFLAGS += -Wl,--gc-sections,--as-needed
 
 define Package/clamav/conffiles
 /etc/config/clamav
+/etc/config/clamav-milter
 endef
 
 define Package/clamav/install
@@ -97,9 +96,11 @@ define Package/clamav/install
 
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) ./files/clamav.config $(1)/etc/config/clamav
+	$(INSTALL_CONF) ./files/clamav-milter.config $(1)/etc/config/clamav-milter
 
 	$(INSTALL_DIR) $(1)/etc/init.d/
 	$(INSTALL_BIN) ./files/clamav.init $(1)/etc/init.d/clamav
+	$(INSTALL_BIN) ./files/clamav-milter.init $(1)/etc/init.d/clamav-milter
 
 	$(INSTALL_DIR) $(1)/usr/share/clamav
 	$(CP) ./files/bytecode.cvd $(1)/usr/share/clamav/

@@ -6,28 +6,34 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=node
 
-ifeq ($(CONFIG_NODEJS_16),y)
-PKG_VERSION:=v16.18.1
+ifeq ($(CONFIG_NODEJS_18),y)
+PKG_VERSION:=v18.15.0
 PKG_RELEASE:=1
-PKG_HASH:=1f8051a88f86f42064f4415fe7a980e59b0a502ecc8def583f6303bc4d445238
+PKG_HASH:=8e44d65018ff973284195c23186469a0ea4082e97ec4200e5f5706d5584daa37
+PATCH_DIR:=./patches/v18.x
+else
+ifeq ($(CONFIG_NODEJS_16),y)
+PKG_VERSION:=v16.19.1
+PKG_RELEASE:=1
+PKG_HASH:=17fb716406198125b30c94dd3d1756207b297705626afe16d8dc479a65a1d8b5
 PATCH_DIR:=./patches/v16.x
 else
 ifeq ($(CONFIG_NODEJS_14),y)
-PKG_VERSION:=v14.21.1
+PKG_VERSION:=v14.21.3
 PKG_RELEASE:=1
-PKG_HASH:=3db95d6ca728957bf090b6301a7a9d2d80714b2a06d898a1db65c6e42b1da7ac
+PKG_HASH:=458ec092e60ad700ddcf079cb63d435c15da4c7bb3d3f99b9a8e58a99e54075e
 PATCH_DIR:=./patches/v14.x
 else
-PKG_VERSION:=v18.12.1
-PKG_RELEASE:=1
-PKG_HASH:=4fa406451bc52659a290e52cfdb2162a760bd549da4b8bbebe6a29f296d938df
-PATCH_DIR:=./patches/v18.x
+PKG_VERSION:=v12.22.12
+PKG_RELEASE:=2
+PKG_HASH:=bc42b7f8495b9bfc7f7850dd180bb02a5bdf139cc232b8c6f02a6967e20714f2
+PATCH_DIR:=./patches/v12.x
+endif
 endif
 endif
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_URL:=https://mirrors.tencent.com/nodejs-release/$(PKG_VERSION) \
-                https://nodejs.org/dist/$(PKG_VERSION)
+PKG_SOURCE_URL:=https://nodejs.org/dist/$(PKG_VERSION)
 
 PKG_MAINTAINER:=Hirokazu MORIKAWA <morikw2@gmail.com>
 PKG_LICENSE:=MIT
@@ -52,8 +58,8 @@ define Package/node
   SUBMENU:=Node.js
   TITLE:=Node.js is a platform built on Chrome's JavaScript runtime
   URL:=https://nodejs.org/
-  DEPENDS:=@HAS_FPU @(i386||x86_64||arm||aarch64||mipsel) \
-	   +libstdcpp +libopenssl +zlib +libnghttp2 +libuv \
+  DEPENDS:=@(HAS_FPU||KERNEL_MIPS_FPU_EMULATOR||SOFT_FLOAT) @!arc @!armeb @!powerpc \
+	   +libstdcpp +NODEJS_18:libopenssl +zlib +libnghttp2 +libuv \
 	   +libcares +libatomic +NODEJS_ICU_SYSTEM:icu +NODEJS_ICU_SYSTEM:icu-full-data
 endef
 
@@ -87,18 +93,25 @@ define Package/node/config
 
 	choice
 		prompt "Version Selection"
+		default NODEJS_12 if mips||mipsel||mips64||mips64el
 		default NODEJS_16
 		help
 		 Select node.js version.
 		 The host package version is also the same.
 
+		config NODEJS_12
+			bool "12.x Maintenance LTS"
+
 		config NODEJS_14
+			depends on !(mips||mipsel||mips64||mips64el)
 			bool "14.x Maintenance"
 
 		config NODEJS_16
+			depends on !(mips||mipsel||mips64||mips64el)
 			bool "16.x Maintenance"
 
 		config NODEJS_18
+			depends on !(mips||mipsel||mips64||mips64el)
 			bool "18.x Active LTS"
 	endchoice
 
@@ -113,10 +126,11 @@ define Package/node/config
 				bool "Disable"
 
 			config NODEJS_ICU_SMALL
+				depends on !BIG_ENDIAN
 				bool "small-icu"
 
 			config NODEJS_ICU_SYSTEM
-				depends on ARCH_64BIT
+				depends on ARCH_64BIT&&!BIG_ENDIAN
 				bool "system-icu"
 		endchoice
 	endif
@@ -124,7 +138,11 @@ define Package/node/config
 	endmenu
 endef
 
-NODEJS_CPU:=$(subst aarch64,arm64,$(subst x86_64,x64,$(subst i386,ia32,$(ARCH))))
+NODEJS_CPU:=$(subst powerpc,ppc,$(subst aarch64,arm64,$(subst x86_64,x64,$(subst i386,ia32,$(ARCH)))))
+
+ifeq ($(CONFIG_NODEJS_10),y)
+TARGET_LDFLAGS+=-latomic
+endif
 
 ifneq ($(CONFIG_ARCH_64BIT),y)
 FORCE_32BIT:=-m32
@@ -149,11 +167,12 @@ CONFIGURE_ARGS:= \
 	--dest-os=linux \
 	--cross-compiling \
 	--shared-zlib \
-	--shared-openssl \
+	$(if $(CONFIG_NODEJS_18),--shared-openssl) \
 	--shared-nghttp2 \
-	--shared-libuv \
 	--shared-cares \
 	--with-intl=$(if $(CONFIG_NODEJS_ICU_SMALL),small-icu,$(if $(CONFIG_NODEJS_ICU_SYSTEM),system-icu,none)) \
+	$(if $(findstring mips,$(NODEJS_CPU)), \
+		$(if $(CONFIG_SOFT_FLOAT),--with-mips-float-abi=soft)) \
 	$(if $(findstring +neon,$(CONFIG_CPU_TYPE)),--with-arm-fpu=neon) \
 	$(if $(findstring +vfp",$(CONFIG_CPU_TYPE)),--with-arm-fpu=vfp) \
 	$(if $(findstring +vfpv3",$(CONFIG_CPU_TYPE)),--with-arm-fpu=vfpv3-d16) \
@@ -189,14 +208,14 @@ define Package/node-npm/install
 	$(LN) ../lib/node_modules/npm/bin/npx-cli.js $(1)/usr/bin/npx
 endef
 
-define Package/node-npm/postrm
-#!/bin/sh
-rm -rf /usr/lib/node_modules/npm || true
-endef
-
 define Host/Install
 	$(RM) -rf $(1)/lib/node_modules/npm
 	$(call Host/Install/Default)
+endef
+
+define Package/node-npm/postrm
+#!/bin/sh
+rm -rf /usr/lib/node_modules/npm || true
 endef
 
 $(eval $(call HostBuild))
