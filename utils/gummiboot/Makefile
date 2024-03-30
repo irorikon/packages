@@ -40,7 +40,6 @@ define Package/gummiboot/description
 endef
 
 CONFIGURE_ARGS += \
-	--disable-manpages \
 	--with-efi-libdir=$(STAGING_DIR)/usr/lib \
 	--with-efi-ldsdir=$(STAGING_DIR)/usr/lib \
 	--with-efi-includedir=$(STAGING_DIR)/usr/include

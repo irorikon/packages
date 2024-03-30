@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2007-2022 OpenWrt.org
+# Copyright (C) 2007-2023 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -9,7 +9,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=zoneinfo
-PKG_VERSION:=2022b
+PKG_VERSION:=2023c
 PKG_RELEASE:=1
 
 #As i couldn't find real license used "Public Domain"
@@ -19,14 +19,14 @@ PKG_LICENSE:=Public Domain
 PKG_SOURCE:=tzdata$(PKG_VERSION).tar.gz
 PKG_SOURCE_CODE:=tzcode$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://www.iana.org/time-zones/repository/releases
-PKG_HASH:=f590eaf04a395245426c2be4fae71c143aea5cebc11088b7a0a5704461df397d
+PKG_HASH:=3f510b5d1b4ae9bb38e485aa302a776b317fb3637bdb6404c4adf7b6cadd965c
 
 include $(INCLUDE_DIR)/package.mk
 
 define Download/tzcode
    FILE=$(PKG_SOURCE_CODE)
    URL=$(PKG_SOURCE_URL)
-   HASH:=bab20d943e59a3218435f48d868a4e552f18d6d7f3dd128660c5660c80b8a05f
+   HASH:=46d17f2bb19ad73290f03a203006152e0fa0d7b11e5b71467c4a823811b214e7
 endef
 
 $(eval $(call Download,tzcode))
@@ -103,7 +103,6 @@ define Package/zoneinfo-all
 $(call Package/zoneinfo/Default)
   TITLE:=Zone Information (all zones)
   DEPENDS:= \
-	+zoneinfo-simple \
 	+zoneinfo-core \
 	+zoneinfo-africa \
 	+zoneinfo-northamerica \
@@ -145,6 +144,10 @@ define Package/zoneinfo-core/install
 	  $(CP) $(PKG_INSTALL_DIR)/zoneinfo/$$$$i \
 	      $(1)/usr/share/zoneinfo ; \
 	done
+endef
+
+define Package/zoneinfo-all/install
+	:
 endef
 
 define Package/zoneinfo-simple/install

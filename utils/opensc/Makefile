@@ -99,7 +99,6 @@ endef
 endef
 
 CONFIGURE_ARGS += \
-	--disable-doc \
 	--disable-man \
 	--disable-notify \
 	--disable-strict

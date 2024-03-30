@@ -1,12 +1,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=podman
-PKG_VERSION:=4.1.0
+PKG_VERSION:=3.4.4
 PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/containers/podman/archive/v$(PKG_VERSION)
-PKG_HASH:=f814e12a7311d486c1ccdc4eb021bc6dd24499569de7a572e436342876f70e95
+PKG_HASH:=718c9e1e734c2d374fcf3c59e4cc7c1755acb954fc7565093e1d636c04b72e3a
 
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
@@ -17,7 +17,7 @@ PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
 
 GO_PKG:=github.com/containers/podman/
-GO_PKG_BUILD_PKG:=github.com/containers/podman/v4/cmd/podman/
+GO_PKG_BUILD_PKG:=github.com/containers/podman/v3/cmd/podman/
 
 include $(INCLUDE_DIR)/package.mk
 include ../../lang/golang/golang-package.mk
@@ -36,26 +36,36 @@ define Download/default-policy
   HASH:=cddfaa8e6a7e5497b67cc0dd8e8517058d0c97de91bf46fff867528415f2d946
 endef
 
-define Package/podman
+define Package/podman/Default
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=Podman
   URL:=https://podman.io
-  DEPENDS:=$(GO_ARCH_DEPENDS) +conmon +cni +cni-plugins +btrfs-progs +glib2 +gnupg2 +firewall +libgpg-error +libseccomp +libgpgme +nsenter +zoneinfo-simple +kmod-veth +catatonit +PODMAN_SELINUX_SUPPORT:libselinux
+endef
+
+define Package/podman
+  $(call Package/podman/Default)
+  DEPENDS:=$(GO_ARCH_DEPENDS) +conmon +cni +cni-plugins +btrfs-progs +glib2 +gnupg2 +iptables +libgpg-error +libseccomp +libgpgme +nsenter +zoneinfo-simple +kmod-veth
+  CONFLICTS:=podman-selinux
+  VARIANT:=default
+  PROVIDES:=podman
+endef
+
+define Package/podman-selinux
+  $(call Package/podman/Default)
+  TITLE += with SELinux support
+  DEPENDS:=$(GO_ARCH_DEPENDS) +conmon +cni +cni-plugins +btrfs-progs +glib2 +gnupg2 +iptables +libgpg-error +libseccomp +libgpgme +nsenter +zoneinfo-simple +kmod-veth +libselinux
+  VARIANT:=selinux
+  PROVIDES:=podman
 endef
 
 define Package/podman/description
   Podman: A tool for managing OCI containers and pods
 endef
 
-define Package/podman/config
-  menu "Configuration"
-
-    config PODMAN_SELINUX_SUPPORT
-    bool "Enable SELinux support"
-    default n
-
-  endmenu
+define Package/podman-selinux/description
+  Podman: A tool for managing OCI containers and pods
+  SELinux enabled.
 endef
 
 define Package/podman/conffiles
@@ -66,7 +76,9 @@ define Package/podman/conffiles
 /etc/cni/net.d/87-podman-bridge.conflist
 endef
 
-ifdef CONFIG_PODMAN_SELINUX_SUPPORT
+Package/podman-selinux/conffiles = $(Package/podman/conffiles)
+
+ifeq ($(BUILD_VARIANT),selinux)
   GO_PKG_TAGS=seccomp,exclude_graphdriver_devicemapper,selinux,apparmor
 else
   GO_PKG_TAGS=seccomp,exclude_graphdriver_devicemapper,apparmor
@@ -86,7 +98,7 @@ define Package/podman/install
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/vendor/github.com/containers/storage/storage.conf $(1)/etc/containers/storage.conf
 	$(INSTALL_DATA) ./files/containers.conf $(1)/etc/containers/containers.conf
 	$(INSTALL_DIR) $(1)/etc/cni/net.d
-	$(INSTALL_CONF) ./files/87-podman-bridge-iptables.conflist $(1)/etc/cni/net.d/87-podman-bridge.conflist
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/cni/87-podman-bridge.conflist $(1)/etc/cni/net.d/
 	$(INSTALL_DIR) $(1)/usr/share/containers
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/vendor/github.com/containers/common/pkg/seccomp/seccomp.json $(1)/usr/share/containers/
 	$(INSTALL_DIR) $(1)/etc/init.d
@@ -94,5 +106,9 @@ define Package/podman/install
 	$(SED) 's/driver = \"\"/driver = \"overlay\"/g' $(1)/etc/containers/storage.conf
 endef
 
+Package/podman-selinux/install = $(Package/podman/install)
+
 $(eval $(call GoBinPackage,podman))
 $(eval $(call BuildPackage,podman))
+$(eval $(call GoBinPackage,podman-selinux))
+$(eval $(call BuildPackage,podman-selinux))
